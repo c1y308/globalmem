@@ -1,0 +1,32 @@
+{
+    "configurations": [
+        {
+            "name": "Linux-Kernel-5.15",
+            "includePath": [
+                // 核心内核头文件路径（保留）
+                "/usr/src/linux-headers-5.15.0-139-generic/include",
+                // 补充：架构头文件的自动生成目录（关键缺失项）
+                "/usr/src/linux-headers-5.15.0-139-generic/arch/x86/include/generated",
+                // 保留架构基础头文件
+                "/usr/src/linux-headers-5.15.0-139-generic/arch/x86/include",
+                // 保留用户态API头文件
+                "/usr/src/linux-headers-5.15.0-139-generic/include/uapi",
+                // 强制覆盖所有子目录（确保linux/下的文件都能被找到）
+                "/usr/src/linux-headers-5.15.0-139-generic/**",
+                // 项目本地文件
+                "${workspaceFolder}/**"
+            ],
+            "defines": [
+                "__KERNEL__",
+                "MODULE",
+                "CONFIG_X86_64"
+            ],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c17",
+            "cppStandard": "c++14",
+            "intelliSenseMode": "linux-gcc-x64",
+            "compilerArgs": ["-std=gnu99"]
+        }
+    ],
+    "version": 4
+}
