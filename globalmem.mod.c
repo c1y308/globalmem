@@ -33,6 +33,7 @@ __used __section("__versions") = {
 	{ 0xd0da656b, "__stack_chk_fail" },
 	{ 0xabac4112, "cdev_add" },
 	{ 0x51b1c11d, "cdev_init" },
+	{ 0xcefb0c9f, "__mutex_init" },
 	{ 0x6091b333, "unregister_chrdev_region" },
 	{ 0xb8b9f817, "kmalloc_order_trace" },
 	{ 0xe3ec2f2b, "alloc_chrdev_region" },
@@ -41,6 +42,8 @@ __used __section("__versions") = {
 	{ 0x92997ed8, "_printk" },
 	{ 0x13c49cc2, "_copy_from_user" },
 	{ 0x88db9f48, "__check_object_size" },
+	{ 0x3213f038, "mutex_unlock" },
+	{ 0x4dfa8d4b, "mutex_lock" },
 	{ 0x5b8239ca, "__x86_return_thunk" },
 	{ 0xbdfb6dbb, "__fentry__" },
 };
@@ -48,4 +51,4 @@ __used __section("__versions") = {
 MODULE_INFO(depends, "");
 
 
-MODULE_INFO(srcversion, "906C42BC589DD645B0F5951");
+MODULE_INFO(srcversion, "ECD64A7D359F01AFF3A0458");

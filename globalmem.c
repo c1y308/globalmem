@@ -10,10 +10,13 @@
 #define MEM_CLEAR 0x1
 #define GLOBALMEM_MAJOR 230  // 如果为0，动态分配主设备号
 #define DEVICE_NUM 10 // 设备数量
+
+
 struct globalmem_dev
 {
     struct cdev cdev;
     unsigned char mem[GLOBALMEM_SIZE];
+    struct mutex mutex;
 };
 
 
@@ -40,7 +43,9 @@ static long globalmem_ioctl(struct file *filp, unsigned int cmd, unsigned long a
     switch (cmd)
     {
     case MEM_CLEAR:
+        mutex_lock(&dev->mutex);
         memset(dev->mem, 0, GLOBALMEM_SIZE);
+        mutex_unlock(&dev->mutex);
         break;
     default:
         return -EINVAL;
@@ -53,41 +58,51 @@ static ssize_t globalmem_read(struct file *filp, char __user *buf, size_t size, 
     unsigned long p = *ppos;
     size_t count = size;
     int ret = 0;
+    struct globalmem_dev *dev = filp->private_data;
     if (p >= GLOBALMEM_SIZE)
         return 0;
     if (p + count > GLOBALMEM_SIZE)
         count = GLOBALMEM_SIZE - p;
 
+    mutex_lock(&dev->mutex);
 
-    if (copy_to_user(buf, globalmem_devp->mem + p, count))
+    if (copy_to_user(buf, dev->mem + p, count)){
+        mutex_unlock(&dev->mutex);
         return -EFAULT;
+    }
     else{
         *ppos += count;
         ret = count;
         printk(KERN_INFO "globalmem_read: read %d bytes from %ld\n", ret, p);
     }
-
+    mutex_unlock(&dev->mutex);
     return ret;
 }
 
 
 static ssize_t globalmem_write(struct file *filp, const char __user *buf, size_t size, loff_t *ppos){
-    unsigned long p = *ppos;
+    long int p = *ppos;
     size_t count = size;
     int ret = 0;
+    struct globalmem_dev *dev = filp->private_data;
     if (p >= GLOBALMEM_SIZE)
         return 0;
     if (p + count > GLOBALMEM_SIZE)
         count = GLOBALMEM_SIZE - p;
 
+    mutex_lock(&dev->mutex);
 
-    if (copy_from_user(globalmem_devp->mem + p, buf, count))
+    if (copy_from_user(dev->mem + p, buf, count)){
+        mutex_unlock(&dev->mutex);
         return -EFAULT;
+    }
     else{
         *ppos += count;
         ret = count;
         printk(KERN_INFO "globalmem_write: write %d bytes to %ld\n", ret, p);
     }
+
+    mutex_unlock(&dev->mutex);
 
     return ret;
 }
@@ -138,6 +153,7 @@ static void globalmem_setup_cdev(struct globalmem_dev *dev, int index)
     if (err)
     {
         printk(KERN_ERR "Error %d adding globalmem %d", err, index);
+        return;
     }
 }
 
@@ -145,14 +161,14 @@ static __init int globalmem_init(void)
 {
     int ret = 0;
     dev_t devno = MKDEV(globalmem_major, 0);
-    if(globalmem_major){  // 指定了主设备号，申请指定的设备号区间
+    if(globalmem_major){  // 指定了主设备号，申请指定的设备号区间（主设备号和设备数量决定）
         ret = register_chrdev_region(devno, DEVICE_NUM, "globalmem");
         if (ret < 0)
         {
             printk(KERN_ERR "globalmem_init: register_chrdev_region failed %d", ret);
             return ret;
         }
-    }else{  // 动态分配一个主设备号以及申请到设备号区间
+    }else{  // 动态分配一个主设备号以及提前申请到设备号区间
         ret = alloc_chrdev_region(&devno, 0, DEVICE_NUM, "globalmem");
         if (ret < 0)
         {
@@ -162,6 +178,7 @@ static __init int globalmem_init(void)
         globalmem_major = MAJOR(devno);
     }
 
+
     globalmem_devp = kmalloc(sizeof(struct globalmem_dev) * DEVICE_NUM, GFP_KERNEL);
     if (!globalmem_devp)
     {
@@ -169,9 +186,10 @@ static __init int globalmem_init(void)
         goto fail_malloc;
     }
     memset(globalmem_devp, 0, sizeof(struct globalmem_dev) * DEVICE_NUM);
-    int i = 0;
+    int i;
     for (i = 0; i < DEVICE_NUM; i++)
     {
+        mutex_init(&globalmem_devp[i].mutex);
         globalmem_setup_cdev(globalmem_devp + i, i);
     }
     printk(KERN_INFO "globalmem_init\n");
@@ -179,7 +197,7 @@ static __init int globalmem_init(void)
     return 0;
 
     fail_malloc:
-    unregister_chrdev_region(devno, 1);
+    unregister_chrdev_region(devno, DEVICE_NUM);
     return ret;
 }
 
@@ -189,6 +207,7 @@ static __exit void globalmem_exit(void)
     int i = 0;
     for (i = 0; i < DEVICE_NUM; i++)
     {
+        mutex_destroy(&globalmem_devp[i].mutex);
         cdev_del(&globalmem_devp[i].cdev);
     }
     kfree(globalmem_devp);
