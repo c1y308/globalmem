@@ -5,6 +5,8 @@
 #include <linux/cdev.h>
 #include <linux/uaccess.h>
 #include <linux/slab.h>
+#include <linux/poll.h>
+
 
 #define GLOBALFIFO_SIZE 0x1000
 #define MEM_CLEAR 0x1
@@ -178,6 +180,24 @@ static loff_t globalfifo_llseek(struct file *filp, loff_t offset, int whence){
     return ret;
 }
 
+
+static unsigned int globalfifo_poll(struct file *filp, struct poll_table_struct *wait){
+    unsigned int mask = 0;
+    struct globalfifo_dev *dev = filp->private_data;  // 获取设备结构体指针
+    mutex_lock(&dev->mutex);
+    poll_wait(filp, &dev->r_queue, wait);
+    poll_wait(filp, &dev->w_queue, wait);
+    if (dev->current_len){
+        mask |= POLLIN | POLLRDNORM;
+    }
+    if (dev->current_len < GLOBALFIFO_SIZE){
+        mask |= POLLOUT | POLLWRNORM;
+    }
+    mutex_unlock(&dev->mutex);
+    return mask;
+}
+
+
 static const struct file_operations globalfifo_fops =
 {
     .owner = THIS_MODULE,
@@ -187,6 +207,7 @@ static const struct file_operations globalfifo_fops =
     .open = globalfifo_open,
     .release = globalfifo_release,
     .llseek = globalfifo_llseek,
+    .poll = globalfifo_poll,
 };
 
 

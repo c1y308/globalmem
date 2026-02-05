@@ -947,6 +947,11 @@ deps_/home/a/globalmem/globalmem.o := \
   include/linux/kasan.h \
     $(wildcard include/config/KASAN_STACK) \
     $(wildcard include/config/KASAN_VMALLOC) \
+  include/linux/poll.h \
+  include/uapi/linux/poll.h \
+  arch/x86/include/generated/uapi/asm/poll.h \
+  include/uapi/asm-generic/poll.h \
+  include/uapi/linux/eventpoll.h \
 
 /home/a/globalmem/globalmem.o: $(deps_/home/a/globalmem/globalmem.o)
 

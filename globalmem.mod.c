@@ -50,6 +50,7 @@ __used __section("__versions") = {
 	{ 0x4afb2238, "add_wait_queue" },
 	{ 0xaad8c7d6, "default_wake_function" },
 	{ 0x4c9f47a5, "current_task" },
+	{ 0x65487097, "__x86_indirect_thunk_rax" },
 	{ 0x3213f038, "mutex_unlock" },
 	{ 0x4dfa8d4b, "mutex_lock" },
 	{ 0x5b8239ca, "__x86_return_thunk" },
@@ -59,4 +60,4 @@ __used __section("__versions") = {
 MODULE_INFO(depends, "");
 
 
-MODULE_INFO(srcversion, "B641BE8E4D2B707A215FBAB");
+MODULE_INFO(srcversion, "9E1E2BA924DB3801E984453");
