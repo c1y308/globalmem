@@ -30,6 +30,7 @@ void main(void){
 
         bzero(&ev_globalfifo, sizeof(ev_globalfifo));
         ev_globalfifo.events = EPOLLIN | EPOLLPRI;
+        
         err = epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &ev_globalfifo);
         if(err == -1){
             perror("epoll_ctl failed\n");
