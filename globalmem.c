@@ -22,11 +22,19 @@ struct globalfifo_dev
     struct mutex mutex;
     wait_queue_head_t r_queue;
     wait_queue_head_t w_queue;
+
+    struct fasync_struct *async_queue;
 };
 
 
 static int globalfifo_major = GLOBALFIFO_MAJOR;
 struct globalfifo_dev *globalfifo_devp;  // 比索引访问更加灵活
+
+
+static int globalfifo_fasync(int fd, struct file *filp, int mode){
+    struct globalfifo_dev *dev = filp->private_data;
+    return fasync_helper(fd, filp, mode, &dev->async_queue);
+}
 
 
 static int globalfifo_open(struct inode *inode, struct file *filp)
@@ -39,6 +47,7 @@ static int globalfifo_open(struct inode *inode, struct file *filp)
 
 static int globalfifo_release(struct inode *inode, struct file *filp)
 {
+    globalfifo_fasync(-1, filp, 0);
     return 0;
 }
 
@@ -127,7 +136,7 @@ static ssize_t globalfifo_write(struct file *filp, const char __user *buf, size_
 
         schedule();
 
-        if (signal_pending(current)){
+        if (signal_pending(current)){  // 如果是信号唤醒的，则还是不能进行写入，直接返回
             ret = -ERESTARTSYS;
             goto out2;
         }
@@ -146,6 +155,10 @@ static ssize_t globalfifo_write(struct file *filp, const char __user *buf, size_
         dev->current_len += count;
         printk(KERN_INFO "globalfifo_write: write %zu bytes, current_len: %u\n", count, dev->current_len);
         wake_up_interruptible(&dev->r_queue);
+        if (dev->async_queue){
+            kill_fasync(&dev->async_queue, SIGIO, POLL_IN);
+            printk(KERN_INFO "globalfifo_write: kill_fasync\n");
+        }
         ret = count;
     }
     out:

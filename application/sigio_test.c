@@ -42,41 +42,66 @@ void input_handler(int num) {
 }
 
 
-int main(void) {
-    int oflags;
-    int ret; // 用于接收fcntl返回值
+static void signalio_handler(int signum){
+    printf("receive a signal from globalfifo,signalnum:%d\n",signum);
+    return;
+}
+
+
+// int main(void) {
+//     int oflags;
+//     int ret; // 用于接收fcntl返回值
     
-    // 处理signal函数的错误
-    if (signal(SIGIO, input_handler) == SIG_ERR) {
-        perror("signal set SIGIO failed");
-        return 1;
+//     // 处理signal函数的错误
+//     if (signal(SIGIO, input_handler) == SIG_ERR) {
+//         perror("signal set SIGIO failed");
+//         return 1;
+//     }
+    
+//     // 设置标准输入的属主为当前进程（错误处理）
+//     ret = fcntl(STDIN_FILENO, F_SETOWN, getpid());
+//     if (ret == -1) {
+//         perror("fcntl F_SETOWN failed");
+//         return 1;
+//     }
+    
+//     // 获取文件状态标志（错误处理）
+//     oflags = fcntl(STDIN_FILENO, F_GETFL);
+//     if (oflags == -1) {
+//         perror("fcntl F_GETFL failed");
+//         return 1;
+//     }
+    
+//     // 设置FASYNC标志（错误处理）
+//     ret = fcntl(STDIN_FILENO, F_SETFL, oflags | FASYNC);
+//     if (ret == -1) {
+//         perror("fcntl F_SETFL failed");
+//         return 1;
+//     }
+    
+//     // 替换忙等循环：用pause()休眠，等待信号（CPU占用率0%）
+//     while (1) {
+//         pause(); // 进程休眠，直到收到任意信号
+//     }
+    
+//     return 0;
+// }
+
+void main(void){
+
+    int fd, oflags;
+    fd = open("/dev/globalfifo", O_RDWR, S_IRUSR | S_IWUSR);
+    if(fd == -1){
+        perror("open /dev/globalfifo failed");
+        return;
+    }else{
+        signal(SIGIO, signalio_handler);
+        fcntl(fd, F_SETOWN, getpid());
+        oflags = fcntl(fd, F_GETFL);
+        fcntl(fd, F_SETFL, oflags | FASYNC);
+        while(1){
+            sleep(100);
+        }
     }
-    
-    // 设置标准输入的属主为当前进程（错误处理）
-    ret = fcntl(STDIN_FILENO, F_SETOWN, getpid());
-    if (ret == -1) {
-        perror("fcntl F_SETOWN failed");
-        return 1;
-    }
-    
-    // 获取文件状态标志（错误处理）
-    oflags = fcntl(STDIN_FILENO, F_GETFL);
-    if (oflags == -1) {
-        perror("fcntl F_GETFL failed");
-        return 1;
-    }
-    
-    // 设置FASYNC标志（错误处理）
-    ret = fcntl(STDIN_FILENO, F_SETFL, oflags | FASYNC);
-    if (ret == -1) {
-        perror("fcntl F_SETFL failed");
-        return 1;
-    }
-    
-    // 替换忙等循环：用pause()休眠，等待信号（CPU占用率0%）
-    while (1) {
-        pause(); // 进程休眠，直到收到任意信号
-    }
-    
-    return 0;
+    return;
 }

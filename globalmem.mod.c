@@ -38,6 +38,7 @@ __used __section("__versions") = {
 	{ 0xb8b9f817, "kmalloc_order_trace" },
 	{ 0xe3ec2f2b, "alloc_chrdev_region" },
 	{ 0x3fd78f3b, "register_chrdev_region" },
+	{ 0xa772d5bf, "kill_fasync" },
 	{ 0x13c49cc2, "_copy_from_user" },
 	{ 0x3eeb2322, "__wake_up" },
 	{ 0x92997ed8, "_printk" },
@@ -53,6 +54,7 @@ __used __section("__versions") = {
 	{ 0x65487097, "__x86_indirect_thunk_rax" },
 	{ 0x3213f038, "mutex_unlock" },
 	{ 0x4dfa8d4b, "mutex_lock" },
+	{ 0x8df945fc, "fasync_helper" },
 	{ 0x5b8239ca, "__x86_return_thunk" },
 	{ 0xbdfb6dbb, "__fentry__" },
 };
@@ -60,4 +62,4 @@ __used __section("__versions") = {
 MODULE_INFO(depends, "");
 
 
-MODULE_INFO(srcversion, "9E1E2BA924DB3801E984453");
+MODULE_INFO(srcversion, "DD01FBB2D3747DC17BFEBE5");
