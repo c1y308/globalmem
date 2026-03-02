@@ -1,1 +1,0 @@
-cmd_/home/a/globalmem/globalmem.ko := ld -r  -m elf_x86_64 -z noexecstack   --build-id=sha1  -T scripts/module.lds -o /home/a/globalmem/globalmem.ko /home/a/globalmem/globalmem.o /home/a/globalmem/globalmem.mod.o;  true

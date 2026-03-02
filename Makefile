@@ -16,7 +16,7 @@ all:
 	$(MAKE) -C $(KERNEL_DIR) M=$(PWD) modules
 
 # 4. 内核模块编译目标：obj-m 表示要构建为可加载模块
-obj-m := globalmem.o  # 必须与.c文件名一致
+obj-m := globalfifo.o  # 必须与.c文件名一致
 
 # 5. 清理目标：删除编译生成的中间文件和模块文件
 clean:

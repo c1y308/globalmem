@@ -1,1 +1,1 @@
-cmd_/home/a/globalmem/modules.order := {   echo /home/a/globalmem/globalmem.ko; :; } | awk '!x[$$0]++' - > /home/a/globalmem/modules.order
+cmd_/home/a/globalfifo/modules.order := {   echo /home/a/globalfifo/globalfifo.ko; :; } | awk '!x[$$0]++' - > /home/a/globalfifo/modules.order
