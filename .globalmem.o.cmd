@@ -952,6 +952,10 @@ deps_/home/a/globalmem/globalmem.o := \
   arch/x86/include/generated/uapi/asm/poll.h \
   include/uapi/asm-generic/poll.h \
   include/uapi/linux/eventpoll.h \
+  include/linux/platform_device.h \
+    $(wildcard include/config/SUSPEND) \
+    $(wildcard include/config/HIBERNATE_CALLBACKS) \
+    $(wildcard include/config/SUPERH) \
 
 /home/a/globalmem/globalmem.o: $(deps_/home/a/globalmem/globalmem.o)
 

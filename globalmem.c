@@ -6,7 +6,7 @@
 #include <linux/uaccess.h>
 #include <linux/slab.h>
 #include <linux/poll.h>
-
+#include <linux/platform_device.h>
 
 #define GLOBALFIFO_SIZE 0x1000
 #define MEM_CLEAR 0x1
@@ -238,26 +238,22 @@ static void globalfifo_setup_cdev(struct globalfifo_dev *dev, int index)
     }
 }
 
-static __init int globalfifo_init(void)
+
+static int globalfifo_probe(struct platform_device *pdev)
 {
-    int ret = 0;
+    int ret;
     int i;
     dev_t devno = MKDEV(globalfifo_major, 0);
-    if(globalfifo_major){  // 指定了主设备号，申请指定的设备号区间（主设备号和设备数量决定）
+    if (globalfifo_major){
         ret = register_chrdev_region(devno, DEVICE_NUM, "globalfifo");
-        if (ret < 0)
-        {
-            printk(KERN_ERR "globalfifo_init: register_chrdev_region failed %d", ret);
-            return ret;
-        }
-    }else{  // 动态分配一个主设备号以及提前申请到设备号区间
+    }
+    else{
         ret = alloc_chrdev_region(&devno, 0, DEVICE_NUM, "globalfifo");
-        if (ret < 0)
-        {
-            printk(KERN_ERR "globalfifo_init: alloc_chrdev_region failed %d", ret);
-            return ret;
-        }
         globalfifo_major = MAJOR(devno);
+    }
+    if (ret < 0){
+        printk(KERN_ERR "globalfifo: register_chrdev_region failed %d\n", ret);
+        return ret;
     }
 
 
@@ -285,22 +281,35 @@ static __init int globalfifo_init(void)
 }
 
 
-static __exit void globalfifo_exit(void)
+static int globalfifo_remove(struct platform_device *pdev)
 {
-    int i = 0;
+    int i;
+    dev_t devno = MKDEV(globalfifo_major, 0);
     for (i = 0; i < DEVICE_NUM; i++)
     {
         mutex_destroy(&globalfifo_devp[i].mutex);
         cdev_del(&globalfifo_devp[i].cdev);
     }
     kfree(globalfifo_devp);
-    unregister_chrdev_region(MKDEV(globalfifo_major, 0), DEVICE_NUM);
+    unregister_chrdev_region(devno, DEVICE_NUM);
     printk(KERN_INFO "globalfifo_exit\n");
+    return 0;
 }
 
 
-module_init(globalfifo_init);
-module_exit(globalfifo_exit);
+static struct platform_driver globalfifo_driver =
+{
+    .driver = {
+        .name = "globalfifo",
+        .owner = THIS_MODULE,
+    },
+    .probe = globalfifo_probe,
+    .remove = globalfifo_remove,
+};
+
+
+module_platform_driver(globalfifo_driver);
+
 MODULE_DESCRIPTION("A simple global memory driver");
 MODULE_AUTHOR("C1Y308");
-MODULE_LICENSE("GPL V2");
+MODULE_LICENSE("GPL");
